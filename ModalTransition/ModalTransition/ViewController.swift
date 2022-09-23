@@ -34,7 +34,18 @@ private extension ViewController {
 
     @objc func pressPresentButtonAction() {
         let toVC = SecondViewController()
+        toVC.modalPresentationStyle = .overFullScreen
+        toVC.transitioningDelegate = self
         present(toVC, animated: true)
     }
 }
 
+extension ViewController: UIViewControllerTransitioningDelegate {
+    func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        return AnimationTransition(checkPresentOrDismiss: true)
+    }
+
+    func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        return AnimationTransition(checkPresentOrDismiss: false)
+    }
+}

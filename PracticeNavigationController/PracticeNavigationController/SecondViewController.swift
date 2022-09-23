@@ -1,9 +1,10 @@
 //
 //  SecondViewController.swift
-//  ModalTransition
+//  PracticeNavigationController
 //
-//  Created by hq on 2022/9/22.
+//  Created by hq on 2022/9/23.
 //
+
 
 import UIKit
 
@@ -14,6 +15,7 @@ class SecondViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         // Do any additional setup after loading the view.
         view.backgroundColor = .white
         setupShowLabel()
@@ -42,6 +44,6 @@ private extension SecondViewController {
     }
 
     @objc func pressDissmissButtonAction() {
-        dismiss(animated: true, completion: nil)
+        self.navigationController?.popViewController(animated: true)
     }
 }
