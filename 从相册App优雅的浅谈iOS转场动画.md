@@ -110,6 +110,53 @@
 
     ```
 
+- **使用UINavigationController来实现页面转场**
+
+  当需要使用到UINavigationController来进行页面转场时，首先我们得先有一个UINavigationController我们才可以通过此方法去进行页面跳转，目前我们创建的项目都是基于storyboard创建的，所以我们加上NavigationController是非常简单的，只需要在storyboard中添加使用即可，具体实现如下：
+  
+  ![image](./naviagtion1.gif)
+  
+  在代码中和上面一样我们写两个简单的页面来完成这个动画，在NavigationController中如果我们默认使用的话，会在左上角出现一个小箭头的标志，可以返回上一个页面，但是如果我们后续开发时候不想要那个小箭头或者想要点击另外一个位置返回页面，这个简单的功能就不能满足我们的需求了，不够优雅，所以我们和上面模态动画一样加一个按钮来模拟上面的情况，所以在demo中点击按钮也是可以正常返回上一级页面的，具体两个VC代码如下：
+  
+    ```swift
+    //
+    //  ViewController.swift
+    //  PracticeNavigationController
+    //
+    //  Created by hq on 2022/9/23.
+    //
+
+    import UIKit
+
+    class ViewController: UIViewController {
+
+        private var jumpToSecondVCButton = UIButton()
+
+        override func viewDidLoad() {
+            super.viewDidLoad()
+            // Do any additional setup after loading the view.
+            setupPresentButton()
+        }
+
+        func setupPresentButton() {
+            view.addSubview(jumpToSecondVCButton)
+            jumpToSecondVCButton.frame.size = CGSize(width: 100, height: 100)
+            jumpToSecondVCButton.setTitle("present", for: .normal)
+            jumpToSecondVCButton.center = view.center
+            jumpToSecondVCButton.backgroundColor = .blue
+            jumpToSecondVCButton.layer.cornerRadius = 10
+            jumpToSecondVCButton.addTarget(self, action: #selector(pressPresentButtonAction), for: .touchUpInside)
+        }
+
+        @objc func pressPresentButtonAction() {
+            let toVC = SecondViewController()
+            self.navigationController?.pushViewController(toVC, animated: true)
+        }
+
+    }
+
+    ```
+
     ```swift
     //
     //  SecondViewController.swift
@@ -159,53 +206,6 @@
         @objc func pressDissmissButtonAction() {
             self.navigationController?.popViewController(animated: true)
         }
-    }
-
-    ```
-
-- **使用UINavigationController来实现页面转场**
-
-  当需要使用到UINavigationController来进行页面转场时，首先我们得先有一个UINavigationController我们才可以通过此方法去进行页面跳转，目前我们创建的项目都是基于storyboard创建的，所以我们加上NavigationController是非常简单的，只需要在storyboard中添加使用即可，具体实现如下：
-  
-  ![image](./naviagtion1.gif)
-  
-  在代码中和上面一样我们写两个简单的页面来完成这个动画，在NavigationController中如果我们默认使用的话，会在左上角出现一个小箭头的标志，可以返回上一个页面，但是如果我们后续开发时候不想要那个小箭头或者想要点击另外一个位置返回页面，这个简单的功能就不能满足我们的需求了，不够优雅，所以我们和上面模态动画一样加一个按钮来模拟上面的情况，所以在demo中点击按钮也是可以正常返回上一级页面的，具体两个VC代码如下：
-  
-    ```swift
-    //
-    //  ViewController.swift
-    //  PracticeNavigationController
-    //
-    //  Created by hq on 2022/9/23.
-    //
-
-    import UIKit
-
-    class ViewController: UIViewController {
-
-        private var jumpToSecondVCButton = UIButton()
-
-        override func viewDidLoad() {
-            super.viewDidLoad()
-            // Do any additional setup after loading the view.
-            setupPresentButton()
-        }
-
-        func setupPresentButton() {
-            view.addSubview(jumpToSecondVCButton)
-            jumpToSecondVCButton.frame.size = CGSize(width: 100, height: 100)
-            jumpToSecondVCButton.setTitle("present", for: .normal)
-            jumpToSecondVCButton.center = view.center
-            jumpToSecondVCButton.backgroundColor = .blue
-            jumpToSecondVCButton.layer.cornerRadius = 10
-            jumpToSecondVCButton.addTarget(self, action: #selector(pressPresentButtonAction), for: .touchUpInside)
-        }
-
-        @objc func pressPresentButtonAction() {
-            let toVC = SecondViewController()
-            self.navigationController?.pushViewController(toVC, animated: true)
-        }
-
     }
 
     ```
