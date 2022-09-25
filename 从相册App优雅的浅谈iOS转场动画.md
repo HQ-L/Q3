@@ -220,6 +220,8 @@
 
   ![image](./modal2.gif)
 
+  展示的是模态动画的操作，在具体实现动画时候，我们需要清楚模态动画结束之后，其实是一个VC显示在了另一个VC之上，所以在重写模态动画的时候，在present动画时候我们需要将第二个页面以全屏的方式显示在第一个页面之上，所以无论我们要进行什么转场动画的操作，我们最后都需要将第一个页面在动画的回调函数中复原；在dismiss动画时候，我们只需要把第二个页面上面展示的东西按照需要的动画方式消失掉就可以。本片博文中，以渐变动画为例介绍如何重写模态的转场动画，具体的动画文件和两个VC的文件如下：
+
     ```swift
     //
     //  AnimationTransition.swift
@@ -364,9 +366,9 @@
         }
     }
 
-   ```
+    ```
 
-   ```swift
+    ```swift
     //
     //  SecondViewController.swift
     //  ModalTransition
@@ -415,8 +417,180 @@
         }
     }
 
-   ```
+    ```
 
 - **UINavigationController转场动画重构**
 
-## 总结
+  如上所说，使用 navigation controller 的方式在进行转场动画的时候也需要遵循UIViewControllerAnimatedTransitioning协议，但是在写动画的时候需要注意和模态动画不太一样的点是，使用 navigation controller 时候，页面进出场的方式是通过栈去控制的，所以不存在一个VC在另一个VC之上的情况，所以如果只是简单的渐变转场的动画，可以通用一个动画来完成。
+  以渐变转场的动画为例，在完成此转场的转场动画时候，我们的思路是只需要写上前一个页面的view和后一个页面的view的不透明度进行变化即可思路也比较简单，具体实现效果以及源代码如下：
+
+  ![image](./navigation2.gif)
+
+    ```swift
+    //
+    //  AnimationTransition.swift
+    //  PracticeNavigationController
+    //
+    //  Created by hq on 2022/9/24.
+    //
+
+
+    import UIKit
+
+    class AnimationTransition: NSObject {
+
+        private var checkPresentOrDismiss = true
+
+        init(checkPresentOrDismiss: Bool) {
+            self.checkPresentOrDismiss = checkPresentOrDismiss
+            super.init()
+        }
+
+    }
+
+    extension AnimationTransition: UIViewControllerAnimatedTransitioning {
+        func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
+            return 0.5
+        }
+
+        func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
+            animateForGradient(using: transitionContext)
+        }
+
+        func animateForGradient(using transitionContext: UIViewControllerContextTransitioning) {
+            guard let fromVC = transitionContext.viewController(forKey: .from) else { return }
+            guard let fromVCView = fromVC.view else { return }
+            guard let toVC = transitionContext.viewController(forKey: .to) else { return }
+            guard let toVCView = toVC.view else { return }
+            let containerView = transitionContext.containerView
+            containerView.addSubview(fromVCView)
+            containerView.addSubview(toVCView)
+            toVCView.alpha = 0.0
+            fromVCView.alpha = 1.0
+
+            UIView.animate(withDuration: 0.5, animations: {
+                fromVCView.alpha = 0.0
+                toVCView.alpha = 1.0
+            }, completion: { (complete) in
+                toVCView.isHidden = false
+                fromVCView.isHidden = false
+                transitionContext.completeTransition(complete)
+            })
+        }
+    }
+
+    ```
+
+    ```swift
+    //
+    //  ViewController.swift
+    //  PracticeNavigationController
+    //
+    //  Created by hq on 2022/9/23.
+    //
+
+    import UIKit
+
+    class ViewController: UIViewController {
+
+        private var jumpToSecondVCButton = UIButton()
+
+        override func viewDidLoad() {
+            super.viewDidLoad()
+            // Do any additional setup after loading the view.
+            setupPresentButton()
+        }
+
+        func setupPresentButton() {
+            view.addSubview(jumpToSecondVCButton)
+            jumpToSecondVCButton.frame.size = CGSize(width: 100, height: 100)
+            jumpToSecondVCButton.setTitle("present", for: .normal)
+            jumpToSecondVCButton.center = view.center
+            jumpToSecondVCButton.backgroundColor = .blue
+            jumpToSecondVCButton.layer.cornerRadius = 10
+            jumpToSecondVCButton.addTarget(self, action: #selector(pressPresentButtonAction), for: .touchUpInside)
+        }
+
+        @objc func pressPresentButtonAction() {
+            let toVC = SecondViewController()
+            self.navigationController?.delegate = self
+            self.navigationController?.pushViewController(toVC, animated: true)
+        }
+
+    }
+
+    extension ViewController: UINavigationControllerDelegate {
+        func navigationController(_ navigationController: UINavigationController, animationControllerFor operation: UINavigationController.Operation, from fromVC: UIViewController, to toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+
+            if operation == .push {
+                return AnimationTransition(checkPresentOrDismiss: true)
+            }
+            return AnimationTransition(checkPresentOrDismiss: false)
+        }
+    }
+    ```
+
+    ```swift
+    //
+    //  SecondViewController.swift
+    //  PracticeNavigationController
+    //
+    //  Created by hq on 2022/9/23.
+    //
+
+
+    import UIKit
+
+    class SecondViewController: UIViewController {
+
+        private var showLabel = UILabel()
+        private var dismissButtton = UIButton()
+
+        override func viewDidLoad() {
+            super.viewDidLoad()
+
+            // Do any additional setup after loading the view.
+            view.backgroundColor = .white
+            setupShowLabel()
+            setupdismissButton()
+        }
+    }
+
+    private extension SecondViewController {
+
+        func setupShowLabel() {
+            view.addSubview(showLabel)
+            showLabel.frame.size = CGSize(width: 200, height: 50)
+            showLabel.center = view.center
+            showLabel.text = "这是第二个页面"
+            showLabel.textAlignment = .center
+            showLabel.backgroundColor = .orange
+        }
+
+        func setupdismissButton() {
+            view.addSubview(dismissButtton)
+            dismissButtton.frame.size = CGSize(width: 100, height: 100)
+            dismissButtton.center = CGPoint(x: view.center.x, y: view.center.y + 80)
+            dismissButtton.setTitle("dismiss", for: .normal)
+            dismissButtton.backgroundColor = .black
+            dismissButtton.addTarget(self, action: #selector(pressDissmissButtonAction), for: .touchUpInside)
+        }
+
+        @objc func pressDissmissButtonAction() {
+            self.navigationController?.popViewController(animated: true)
+        }
+    }
+
+    ```
+
+- **对比总结**
+
+  先对比一下模态转场中重构之前和重构之后的动画实现
+  ![image](./modal1.gif) ![image](./modal2.gif)
+  通过对动画的重构从动画以及结果上来看已经完全看不到标准的模态动画的样式了，使用navigation controller 控制转场的动画就不继续对比了，表现形式和这个一致。
+  所以当我们学会了如何去重置转场动画之后，我们就可以通过自己的需求去重构动画，使页面显示的更加优雅，极大的提高了我们在使用软件的视觉观感与舒适度。
+
+## 注意事项
+
+- 无论是使用哪种动画方式去进行页面跳转他都有一个共同点就是，所有的动画效果需要在transition中的containerView去完成，在delegate中操作时候返回nil就是返回的默认动画，如果没有规范的按照模态转场动画和 navigation controller 转场动画去重构动画，可能会出现使用默认动画时候表现形式报错，比如在使用present时候把前一个页面隐藏了，使用默认的进行返回时候，会直接返回一个黑屏，打开debug会发现此时页面上什么也没有。
+- 在一个VC中我们在写一个动画时候往往不用过多的操作，但是在写VC之间的转场动画时候，我们必须写上完成动画之后的回调，在回调中加上动画效果已完成的操作，不加的话会出现完成过场动画之后第二个页面无法操作的情况。

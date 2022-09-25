@@ -29,8 +29,19 @@ class ViewController: UIViewController {
 
     @objc func pressPresentButtonAction() {
         let toVC = SecondViewController()
+        self.navigationController?.delegate = self
         self.navigationController?.pushViewController(toVC, animated: true)
     }
 
+}
+
+extension ViewController: UINavigationControllerDelegate {
+    func navigationController(_ navigationController: UINavigationController, animationControllerFor operation: UINavigationController.Operation, from fromVC: UIViewController, to toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+
+        if operation == .push {
+            return AnimationTransition(checkPresentOrDismiss: true)
+        }
+        return AnimationTransition(checkPresentOrDismiss: false)
+    }
 }
 
